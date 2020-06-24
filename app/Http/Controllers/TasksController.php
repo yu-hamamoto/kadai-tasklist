@@ -15,12 +15,26 @@ class TasksController extends Controller
      */
     public function index()
     {
-        $tasks=Task::all();
+        $data=[];
+        if(\Auth::check()){
+            $user=\Auth::user();
+            
+            $tasks=$user->tasks()->orderBy('created_at','desc')->paginate(10);
+            
+            $data=[
+                'user'=>$user,
+                'tasks'=>$tasks,
+                ];
+        }
         
-        return view('tasks.index',[
-            'tasks'=>$tasks,
-            ]);
+        
+        
+        return view('tasks.index',$data);
+    
+        
+    
     }
+    
 
     /**
      * Show the form for creating a new resource.
@@ -31,10 +45,16 @@ class TasksController extends Controller
     {
         $task=new Task;
         
+        
         return view('tasks.create',[
             'task'=>$task,
             ]);
-    }
+        
+        
+        return redirect('/');
+    }    
+    
+    
 
     /**
      * Store a newly created resource in storage.
@@ -44,15 +64,26 @@ class TasksController extends Controller
      */
     public function store(Request $request)
     {
-        $this->validate($request,[
+        /*$this->validate($request,[
             'status'=>'required|max:10',
-            ]);
+            ]);*/
             
-        $task=new Task;
+        $request->validate([
+            'content'=>'required|max:255',
+            'status'=>'required|max:10',
+            ]);    
+         
+            
+        /*$task=new Task;
         $task->content=$request->content;
         $task->status=$request->status;
-        $task->save();
-        
+        $task->save();*/
+
+        $request->user()->tasks()->create([
+            'content'=>$request->content,
+            'status'=>$request->status,
+            ]);
+
         return redirect('/');
     }
 
@@ -81,9 +112,14 @@ class TasksController extends Controller
     {
         $task=Task::findOrFail($id);
         
+        
+        
         return view('tasks.edit',[
             'task'=>$task,
             ]);
+        
+        
+        return back();
     }
 
     /**
@@ -107,6 +143,7 @@ class TasksController extends Controller
         
         return redirect('/');
     }
+    
 
     /**
      * Remove the specified resource from storage.
@@ -116,10 +153,17 @@ class TasksController extends Controller
      */
     public function destroy($id)
     {
-        $task=Task::findOrFail($id);
+        /*$task=Task::findOrFail($id);
         
-        $task->delete();
+        $task->delete();*/
+        
+        $task=\App\Task::findOrFail($id);
+        
+        if(\Auth::id()===$task->user_id){
+            $task->delete();
+        }
         
         return redirect('/');
-    }
+   
+   }
 }
