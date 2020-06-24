@@ -19,13 +19,17 @@ class TasksController extends Controller
         if(\Auth::check()){
             $user=\Auth::user();
             
+        
+            
             $tasks=$user->tasks()->orderBy('created_at','desc')->paginate(10);
             
             $data=[
                 'user'=>$user,
                 'tasks'=>$tasks,
                 ];
+                
         }
+        
         
         
         
@@ -97,9 +101,14 @@ class TasksController extends Controller
     {
         $task=Task::findOrfail($id);
         
+        if(\Auth::id()===$task->user_id){
+        
         return view('tasks.show',[
             'task'=>$task,
             ]);
+        }
+        else
+        return redirect('/');
     }
 
     /**
